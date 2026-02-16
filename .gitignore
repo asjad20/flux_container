@@ -1,2 +1,4 @@
 *.safetensors
 .env
+test.py
+t.txt
