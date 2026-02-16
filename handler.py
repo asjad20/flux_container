@@ -4,10 +4,25 @@ import os
 from PIL import Image
 import base64
 from io import BytesIO
+from huggingface_hub import hf_hub_download
 
 # Global model cache
 current_model_name = None
 pipe = None
+lora_loaded = False
+
+# Download LoRA on startup
+LORA_PATH = "/app/loras/my_lora.safetensors"
+os.makedirs("/app/loras", exist_ok=True)
+
+if not os.path.exists(LORA_PATH):
+    hf_hub_download(
+        repo_id="Asjad1020/flux-lora",
+        filename="AIRBORNE1PVC_v1_000002250.safetensors",
+        local_dir="/app/loras",
+        local_dir_use_symlinks=False
+    )
+    os.rename("/app/loras/AIRBORNE1PVC_v1_000002250.safetensors", LORA_PATH)
 
 def load_model(model_type):
     global pipe, current_model_name
@@ -36,8 +51,11 @@ def load_model(model_type):
     current_model_name = model_type
     return pipe
 
-def load_lora(pipe, lora_path):
-    pipe.load_lora_weights(lora_path)
+def load_lora(pipe):
+    global lora_loaded
+    if not lora_loaded:
+        pipe.load_lora_weights(LORA_PATH)
+        lora_loaded = True
     return pipe
 
 def get_reference_images(image_path):
@@ -68,7 +86,7 @@ def handler(job):
     pipe = load_model(model_type)
     
     if model_type == "base" and use_lora:
-        load_lora(pipe, "/app/loras/my_lora.safetensors")
+        load_lora(pipe)
     
     ref_images = get_reference_images(image_path)
     
