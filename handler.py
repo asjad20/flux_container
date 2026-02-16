@@ -15,15 +15,18 @@ lora_loaded = False
 LORA_PATH = "/app/loras/my_lora.safetensors"
 os.makedirs("/app/loras", exist_ok=True)
 
-if not os.path.exists(LORA_PATH):
-    hf_hub_download(
-        repo_id="Asjad1020/flux-lora",
-        filename="AIRBORNE1PVC_v1_000002250.safetensors",
-        local_dir="/app/loras",
-        local_dir_use_symlinks=False
-    )
-    os.rename("/app/loras/AIRBORNE1PVC_v1_000002250.safetensors", LORA_PATH)
-
+try:
+    if not os.path.exists(LORA_PATH):
+        hf_hub_download(
+            repo_id="Asjad1020/flux-lora",
+            filename="AIRBORNE1PVC_v1_000002250.safetensors",
+            local_dir="/app/loras",
+            token=os.environ.get("HF_TOKEN")
+        )
+        os.rename("/app/loras/AIRBORNE1PVC_v1_000002250.safetensors", LORA_PATH)
+except Exception as e:
+    print(f"LoRA download failed: {e}")
+    
 def load_model(model_type):
     global pipe, current_model_name
     
